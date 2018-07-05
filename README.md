@@ -25,3 +25,23 @@ rosrun visualization_helper topic_translator.py _input:="/topic_name/to/read"
 
 実際にどのように要素を記述すればいいかは，topicによるので，rostopic echo で表示された値をよく読んで確認すること．
 
+# quaternion_translator ノード
+
+rostopic list で表示される topic のうち，クオータニオン表記があるもの解釈してオイラー角に変換し，std_msgs/float32 でpublishし直すためのノード．
+
+## 使い方
+
+```
+rosrun visualization_helper quaternion_translator.py _input:="/topic_name/to/read"
+```
+
+```~input``` パラメータに文字列で読みたいトピック名を与える．
+このトピック名は，クオータニオン表記になっているところまで分解して記述する．
+
+例 : IMU (/imu/data topic)の姿勢情報を読みたい場合
+
+```
+/imu/data/orientation
+```
+
+

@@ -18,7 +18,7 @@ class RosTopicTranslatorException(Exception):
     pass
 
 class ROSData(object):
-    def __init__(self, topic, start_time):
+    def __init__(self, topic, start_time, gain):
         self.name = topic
         self.start_time = start_time
         self.error = None
@@ -42,7 +42,7 @@ class ROSData(object):
     def _ros_cb(self, msg):
         val = self._get_data(msg)
         #rospy.loginfo(val)
-        self.pub.publish(val)
+        self.pub.publish(val * gain)
 
     def _get_data(self, msg):
         val = msg
@@ -106,11 +106,17 @@ if __name__ == '__main__':
     else:
         rospy.loginfo("No input parameter!!")
         sys.exit(1)
+
+    if rospy.has_param("~gain"):
+        gain = rospy.get_param("~gain")
+        rospy.loginfo("Set gain to " + str(gain))
+    else:
+        gain = 1.0
    
     start_time = rospy.get_time()
     rosdata = {}
     
-    rosdata[topic_name] = ROSData(topic_name, start_time)
+    rosdata[topic_name] = ROSData(topic_name, start_time, gain)
     if rosdata[topic_name].error is not None:
         rospy.loginfo(str(rosdata[topic_name].error))
         del rosdata[topic_name]

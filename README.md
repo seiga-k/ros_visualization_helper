@@ -25,6 +25,10 @@ rosrun visualization_helper topic_translator.py _input:="/topic_name/to/read"
 
 実際にどのように要素を記述すればいいかは，topicによるので，rostopic echo で表示された値をよく読んで確認すること．
 
+```~gain``` 読んだパラメータにゲインをかける．
+例えば入力が±1.0に変化する場合，gainを100にすれば±100と変化するようになるので，可視化の際に正規化した値をパーセントとして読みたい場合などに有効．
+また，角度のラジアン・度変換にも利用できる．
+
 # quaternion_translator ノード
 
 rostopic list で表示される topic のうち，クオータニオン表記があるもの解釈してオイラー角に変換し，std_msgs/float32 でpublishし直すためのノード．

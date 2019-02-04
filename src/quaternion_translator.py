@@ -29,11 +29,14 @@ class ROSQuat(object):
         rospy.loginfo("real : " + real_topic)
         rospy.loginfo("fields : " + fields)
         self.field = fields.strip('/')
+        rospy.loginfo("field  : " + self.field)
         if topic_type is not None:
+            self.field_evals = self._generate_field_evals(fields)
             data_class = roslib.message.get_message_class(topic_type)
             self.sub = rospy.Subscriber(real_topic, data_class, self._ros_cb)
         else:
             self.error = RosTopicTranslatorException("Can not resolve topic type of %s" % topic)
+            sys.exit(1)
         self.pubx = rospy.Publisher("~" + topic.strip('/') + "/x", Float32, queue_size=10)
         self.puby = rospy.Publisher("~" + topic.strip('/') + "/y", Float32, queue_size=10)
         self.pubz = rospy.Publisher("~" + topic.strip('/') + "/z", Float32, queue_size=10)
@@ -44,12 +47,14 @@ class ROSQuat(object):
 
     def _ros_cb(self, msg):
 #        print(msg)
-        quat = getattr(msg, self.field)
-#        print(quat)
-        x = getattr(quat, "x")
-        y = getattr(quat, "y")
-        z = getattr(quat, "z")
-        w = getattr(quat, "w")
+        val = msg
+        for f in self.field_evals:
+            val = f(val)
+            #print(val)
+        x = getattr(val, "x")
+        y = getattr(val, "y")
+        z = getattr(val, "z")
+        w = getattr(val, "w")
 #        val = self._get_data(msg)
         rpy = euler_from_quaternion([w, x, y, z])
 #        print(rpy)
@@ -76,6 +81,26 @@ class ROSQuat(object):
             return t_type, t, topic[len(t):]
         else:
             return None, None, None
+
+    def _field_eval(self, field_name):
+        def fn(f):
+            return getattr(f, field_name)
+        return fn
+
+    def _generate_field_evals(self, fields):
+        try:
+            evals = []
+            fields = [f for f in fields.split('/') if f]
+            for f in fields:
+                if '[' in f:
+                    field_name, rest = f.split('[')
+                    slot_num = string.atoi(rest[:rest.find(']')])
+                    evals.append(_array_eval(field_name, slot_num))
+                else:
+                    evals.append(self._field_eval(f))
+            return evals
+        except Exception as e:
+            raise RosTopicTranslatorException("cannot parse field reference [%s]: %s" % (fields, str(e)))
         
 if __name__ == '__main__':
     rospy.init_node('quaternion_translator')

@@ -23,7 +23,9 @@ class ROSQuat(object):
         self.start_time = start_time
         self.error = None
         self.lock = threading.Lock()
-        self.mode = mode
+        self.k = 1.0
+        if mode :
+            self.k = 180.0 / math.pi
         topic_type, real_topic, fields = self._get_topic_type(topic)
         rospy.loginfo("type : " + topic_type)
         rospy.loginfo("real : " + real_topic)
@@ -56,14 +58,12 @@ class ROSQuat(object):
         z = getattr(val, "z")
         w = getattr(val, "w")
 #        val = self._get_data(msg)
-        rpy = euler_from_quaternion([w, x, y, z])
+        rpy = euler_from_quaternion([x, y, z, w], 'szyx')
+#        print(x, y, z, w)
 #        print(rpy)
-        k = 1.0
-        if self.mode :
-            k = 180.0 / math.pi
-        self.pubx.publish(rpy[2] * k)
-        self.puby.publish(rpy[1] * k)
-        self.pubz.publish(rpy[0] * k)
+        self.pubx.publish(rpy[2] * self.k)
+        self.puby.publish(rpy[1] * self.k)
+        self.pubz.publish(rpy[0] * self.k)
             
     def _get_topic_type(self, topic):
         try:

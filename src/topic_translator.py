@@ -122,4 +122,4 @@ if __name__ == '__main__':
         del rosdata[topic_name]
     else:
         rospy.loginfo("Input topic set up correctly")
-    rospy.spin()
+        rospy.spin()
